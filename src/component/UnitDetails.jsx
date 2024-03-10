@@ -1,7 +1,5 @@
 import React,{ useState,useEffect } from "react";
 
-import { redirect } from "react-router-dom";
-
 import { Link } from 'react-router-dom';
 import { db } from "../../lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
