@@ -38,7 +38,7 @@ function UnitLogin({closeModal}) {
 			<label htmlFor="unitId" className="flex items-center mb-2 mt-5">
 				<input
                     ref={unitRef}
-					placeholder="Enter unit ID"
+					placeholder="Enter unit number"
 					type="text"
 					name="unitId"
 					required

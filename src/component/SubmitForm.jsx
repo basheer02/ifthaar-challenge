@@ -9,8 +9,8 @@ import { unitID } from "./UnitLogin";
 
 function SubmitForm({ closeModal, onNewContribution }) {
 	const [name, setName] = useState("");
-	const unit = unitDatas[unitID][0]
-	const cluster = unitDatas[unitID][1];
+	const unit = unitDatas[unitID][0].toLowerCase();
+	const cluster = unitDatas[unitID][1].toLowerCase();
 	const [count, setCount] = useState(1);
 	const [phone, setPhone] = useState("")
 
@@ -73,7 +73,8 @@ function SubmitForm({ closeModal, onNewContribution }) {
 					disabled
 					type="text"
 					name="cluster"
-					value={`${`Cluster - ${cluster}`}`}
+					value={`${`Cluster - ${cluster.toUpperCase()}`}`}
+					style={{fontSize:"16px"}}
 					className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
 				/>
 			</label>
@@ -82,43 +83,11 @@ function SubmitForm({ closeModal, onNewContribution }) {
 					disabled
 					type="text"
 					name="unit"
-					value={`${`Unit - ${unit}`}`}
+					value={`${`Unit - ${unit.toUpperCase()}`}`}
+					style={{fontSize:"16px"}}
 					className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
 				/>
 			</label>
-			{/*<label htmlFor="cluster" className="flex items-center mb-2">
-				<select
-					name="cluster"
-					value={cluster}
-					required
-					onChange={handleClusterChange}
-					className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
-				>
-					<option defaultChecked disabled value="ph">
-						Select Cluster
-					</option>
-					<option defaultChecked value="edarikode">
-						Edarikode
-					</option>
-					<option value="kozhichena">Kozhichena</option>
-					<option value="pookiparamba">Pookiparamba</option>
-					<option value="thennala">Thennala</option>
-				</select>
-			</label> 
-			<label htmlFor="unit" className="flex items-center mb-2">
-				<select
-					name="unit"
-					required
-					value={unit}
-					onChange={(e) => setUnit(e.target.value)}
-					className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
-				>
-					<option disabled value="ph">Select Unit</option>
-                    {unitList[cluster]?.map((unitName) => (
-                        <option key={unitName.toLowerCase()} value={unitName.toLowerCase()}>{unitName}</option>
-                    ))}
-				</select>
-					</label> */}
 			<div className="flex items-center justify-center">
 				<p className="pr-2">Contribution: </p>
 				<button

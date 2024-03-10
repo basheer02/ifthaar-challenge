@@ -1,8 +1,13 @@
-import { useState,useEffect } from "react";
+import React,{ useState,useEffect } from "react";
 
-import { Link } from 'react-router-dom'
+import { redirect } from "react-router-dom";
+
+import { Link } from 'react-router-dom';
 import { db } from "../../lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
+
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 import { unitDatas } from "./unitDatas";
 import { unitID } from "./UnitLogin";
@@ -19,19 +24,17 @@ async function fetchDataFromFirestore() {
 function UnitDetails(){
 
 	const [userData, setUserData] = useState([]);
-	const [selectedCluster, setSelectedCluster] = useState("ph");
-	const [selectedUnit, setSelectedUnit] = useState("ph");
-    const [isVisible, setIsVisible] = useState(false);
 
-    const unit = unitDatas[unitID][0]
-	const cluster = unitDatas[unitID][1]; 
+	try{
+		const unit = unitDatas[unitID][0].toLowerCase();
+		const cluster = unitDatas[unitID][1].toLowerCase(); 
+	}
+    catch{
+		window.location.href = '/';
+	}
 
-	const unitList = {
-		pookiparamba: ['KULANGARA','KUNDANCHINA PAPPALIPARAMBA', 'KUNDUKKULAM', 'PARAMMAL', 'PARAPPURAM', 'POOKIPARAMBA'],
-		edarikode: ['CHERUSHOLA - AREEKKAL', 'EDARIKKODE', 'KLARI MOOCHIKKAL', 'KLARI PUTHOOR', 'KLARI SOUTH', 'KURUKA', 'POTTIPPARA', 'PUTHUPPARAMBA', 'SWAGATHAMAD', 'VARAPPAMAD'],
-		kozhichena: ['CHENAPPURAM', 'CHETTIYAM KINAR', 'CHIRAKKAL', 'KOZHICHENA','MAMU BAZAR', 'PERUMANNA', 'THIRUTHI'],
-		thennala: ['ALUNGAL', 'APPLA EAST', 'APPLA WEST', 'ARAKKAL', 'CHEMMERIPARA', 'KODAKKALLU', 'THACHAMMAD', 'WEST BAZAR']
-	};
+	const unit = unitDatas[unitID][0].toLowerCase();
+	const cluster = unitDatas[unitID][1].toLowerCase();
 
 	const fetchData = async () => {
 		try {
@@ -56,27 +59,41 @@ function UnitDetails(){
 
 	// biome-ignore lint/complexity/noForEach: <explanation>
 	filteredUserData.forEach((user) => {
-		personalData.push({key: user.name, value:[user.contribution, user.phone]})
+		personalData.push({key: user.id, value:[user.name, user.phone,user.contribution]})
 		total += user.contribution
 	});
 
-	personalData.sort((a, b) => b.value[0] - a.value[0]);
+	personalData.sort((a, b) => b.value[2] - a.value[2]);
 
-	const handleClusterChange = (e) => {
-        const selectedCluster = e.target.value;
-        setSelectedCluster(selectedCluster);
-        unitList[selectedCluster].sort()
-        // Reset unit to default value when cluster changes
-        setSelectedUnit("ph");
-        setIsVisible(false)
-    };
+	const convertToExcel = () => {
 
-	const handleUnitChange = (e) => {
-        const unit = e.target.value;
-        setSelectedUnit(unit);
-		fetchData();
-        setIsVisible(true)
-    };
+		/*const sortedData = [...userData].sort((a, b) => {
+		  // First sort by 'cluster'
+		  const clusterComparison = a.cluster.localeCompare(b.cluster);
+		  if (clusterComparison !== 0) {
+			return clusterComparison;
+		  }
+		  
+		  // If 'cluster' values are equal, then sort by 'unit' within the cluster
+		  return a.unit.localeCompare(b.unit);
+		});*/
+  
+  
+		const formattedData = filteredUserData.map(item => ({
+		  Cluster: item.cluster,
+		  Unit: item.unit,
+		  Name: item.name,
+		  Phone: item.phone,
+		  Contribution: item.contribution
+		}));
+		
+		const fileName = unit+'_data.xlsx';
+		const ws = XLSX.utils.json_to_sheet(formattedData);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, 'Data');
+		const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+		saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), fileName);
+	  };
 
 
     return(
@@ -96,7 +113,8 @@ function UnitDetails(){
 			        		disabled
 			        		type="text"
 			        		name="cluster"
-			        		value={`${`Cluster - ${cluster}`}`}
+			        		value={`${`Cluster - ${cluster.toUpperCase()}`}`}
+							style={{fontSize:"16px"}}
 			        		className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
 			        	/>
 			        </label>
@@ -105,43 +123,11 @@ function UnitDetails(){
 			        		disabled
 			        		type="text"
 			        		name="unit"
-			        		value={`${`Unit - ${unit}`}`}
+			        		value={`${`Unit - ${unit.toUpperCase()}`}`}
+							style={{fontSize:"16px"}}
 			        		className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
 			        	/>
 			        </label>
-                   {/*} <label htmlFor="cluster" className="flex items-center mb-4">
-                        <select
-                            name="cluster"
-                            value={selectedCluster}
-                            required
-                            onChange={handleClusterChange}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
-                        >
-                            <option defaultChecked disabled value="ph">
-                                Select Cluster
-                            </option>
-                            <option defaultChecked value="edarikode">
-                                Edarikode
-                            </option>
-                            <option value="kozhichena">Kozhichena</option>
-                            <option value="pookiparamba">Pookiparamba</option>
-                            <option value="thennala">Thennala</option>
-                        </select>
-                    </label>
-                    <label htmlFor="unit" className="flex items-center mb-4">
-                        <select
-                            name="unit"
-                            required
-                            value={selectedUnit}
-                            onChange={handleUnitChange}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:border-sky-500"
-                        >
-                            <option disabled value="ph">Select Unit</option>
-                            {unitList[selectedCluster]?.map((unitName) => (
-                                <option key={unitName.toLowerCase()} value={unitName.toLowerCase()}>{unitName}</option>
-                            ))}
-                        </select>
-                            </label> */}
                 </div>
                 <div className="overflow-y-auto w-full max-w-md">
                     {personalData.map((data, index) => (
@@ -154,9 +140,9 @@ function UnitDetails(){
         					}`}
         				key={data.key}
                         > 
-                        <div className="flex-1"> <p className="text-xl" style={{fontFamily: 'Liberation Mono, monospace', fontWeight: "lighter", fontSize:"18px"}}>{data.key}</p></div>
+                        <div className="flex-1"> <p className="text-xl" style={{fontFamily: 'Liberation Mono, monospace', fontWeight: "lighter", fontSize:"17px"}}>{data.value[0]}</p></div>
                         <div className="flex-1"><p className="text-gray-600">{data.value[1]}</p></div>
-                        <p className="text-gray-600">{data.value[0]}</p>
+                        <p className="text-gray-600">{data.value[2]}</p>
                         </div>
                     ))}
                 </div>
@@ -164,6 +150,13 @@ function UnitDetails(){
         	    	<p className="text-xl" style={{fontFamily: 'Liberation Mono, monospace', fontWeight: "inherit", fontSize:"18px"}}>Total Contributions</p>
         	    	<p className="text-gray-600">{total}</p>
         	    </div>
+				<button
+					type="button"
+					onClick={convertToExcel}
+					className="bg-sky-500 text-white py-2 px-4 w-full rounded-md hover:bg-sky-700 mb-4"
+				>
+					Download details
+				</button>
             </div>
         </div>
 
